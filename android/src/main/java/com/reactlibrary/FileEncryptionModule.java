@@ -46,26 +46,6 @@ public class FileEncryptionModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void encryptString(String unencrypted, String password, Promise promise) {
-        try {
-            String encrypted = RNCryptorNative.encrypt(unencrypted, password);
-            promise.resolve(encrypted);
-        } catch (Exception e) {
-            promise.reject("error", e);
-        }
-    }
-
-    @ReactMethod
-    public void decryptString(String encrypted, String password, Promise promise) {
-        try {
-            String unencrypted = RNCryptorNative.decrypt(encrypted, password);
-            promise.resolve(unencrypted);
-        } catch (Exception e) {
-            promise.reject("error", e);
-        }
-    }
-
-    @ReactMethod
     public void sampleMethod(String stringArgument, int numberArgument, Callback callback) {
         // TODO: Implement some actually useful functionality
         callback.invoke("Received numberArgument: " + numberArgument + " stringArgument: " + stringArgument);
