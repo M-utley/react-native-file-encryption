@@ -17,14 +17,12 @@ Pod::Spec.new do |s|
   # optional - use expanded license entry instead:
   # s.license    = { :type => "MIT", :file => "LICENSE" }
   s.authors      = { "Your Name" => "mikeutley@email.com" }
-  s.platforms    = { :ios => "11.0" }
+  s.platforms    = { :ios => "13.4" }
   s.source       = { :git => "https://github.com/github_account/react-native-file-encryption.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,c,cc,cpp,m,mm,swift}"
   s.requires_arc = true
 
-  s.dependency "React"
-  # ...
-  # s.dependency "..."
+  s.dependency "React-Core"
 end
 
