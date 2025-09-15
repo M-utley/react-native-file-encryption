@@ -6,27 +6,96 @@ class FileEncryption: NSObject {
         return true
     }
 
+    /**
+     * Converts a URI or file path to a proper file URL
+     * Handles both file:// URIs and direct file system paths
+     */
+    private func getFileURL(from path: String) -> URL {
+        if path.hasPrefix("file://") {
+            return URL(string: path)!
+        } else {
+            return URL(fileURLWithPath: path)
+        }
+    }
+    
+    /**
+     * Validates that a file exists and is readable
+     */
+    private func validateInputFile(at url: URL, reject: @escaping RCTPromiseRejectBlock) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            reject("error", "Input file does not exist: \(url.path)", nil)
+            return false
+        }
+        guard FileManager.default.isReadableFile(atPath: url.path) else {
+            reject("error", "Cannot read input file: \(url.path)", nil)
+            return false
+        }
+        return true
+    }
+    
+    /**
+     * Ensures the output directory exists and file is writable
+     */
+    private func validateOutputFile(at url: URL, reject: @escaping RCTPromiseRejectBlock) -> Bool {
+        let parentDir = url.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: parentDir.path) {
+            do {
+                try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                reject("error", "Cannot create output directory: \(parentDir.path)", error)
+                return false
+            }
+        }
+        return true
+    }
+
     @objc
     func encryptFile(_ readPath: String, writePath: String, password: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         do {
-            let file = try NSData(contentsOfFile: readPath) as Data
+            let inputURL = getFileURL(from: readPath)
+            let outputURL = getFileURL(from: writePath)
+            
+            // Validate input file
+            guard validateInputFile(at: inputURL, reject: reject) else {
+                return
+            }
+            
+            // Validate output file
+            guard validateOutputFile(at: outputURL, reject: reject) else {
+                return
+            }
+            
+            let file = try NSData(contentsOfFile: inputURL.path) as Data
             let cipherText = RNCryptor.encrypt(data: file, withPassword: password)
-        try cipherText.write(to: URL(fileURLWithPath: writePath), options: .atomic)
+            try cipherText.write(to: outputURL, options: .atomic)
             resolve(["success": true])
         } catch {
-            reject("error", "error", error)
+            reject("error", "Encryption failed", error)
         }
     }
     
     @objc
     func decryptFile(_ readPath: String, writePath: String, password: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         do {
-            let file = try NSData(contentsOfFile: readPath) as Data
-            let cipherText =  try RNCryptor.decrypt(data: file, withPassword: password)
-        try cipherText.write(to: URL(fileURLWithPath: writePath), options: .atomic)
+            let inputURL = getFileURL(from: readPath)
+            let outputURL = getFileURL(from: writePath)
+            
+            // Validate input file
+            guard validateInputFile(at: inputURL, reject: reject) else {
+                return
+            }
+            
+            // Validate output file
+            guard validateOutputFile(at: outputURL, reject: reject) else {
+                return
+            }
+            
+            let file = try NSData(contentsOfFile: inputURL.path) as Data
+            let cipherText = try RNCryptor.decrypt(data: file, withPassword: password)
+            try cipherText.write(to: outputURL, options: .atomic)
             resolve(["success": true])
         } catch {
-            reject("error", "error", error)
+            reject("error", "Decryption failed", error)
         }
     }
 
