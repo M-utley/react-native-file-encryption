@@ -75,7 +75,7 @@ public class FileEncryptionModule extends ReactContextBaseJavaModule {
         return true;
     }
 
-     @ReactMethod
+    @ReactMethod
     public void encryptFile(String readPath, String writePath, String password, Promise promise) {
         try {
             File inputFile = getFileFromPath(readPath);
